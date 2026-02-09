@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "GPS-Low-power-sparkfun-nrf9160",
+			"path": "."
+		},
+		{
+			"name": "v3.1.0",
+			"path": "/opt/nordic/ncs/v3.1.0"
+		}
+	],
+	"settings": {
+		"nrf-connect.applications": [
+			"${workspaceFolder}/nfed/samples/accelerometer"
+		]
+	}
+}

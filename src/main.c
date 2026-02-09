@@ -722,6 +722,7 @@ int main(void)
     if (sizeof(CONFIG_GNSS_SAMPLE_REFERENCE_LATITUDE) > 1 &&
         sizeof(CONFIG_GNSS_SAMPLE_REFERENCE_LONGITUDE) > 1) {
         ref_used = true;
+        // Convert string defines to double (atof -> ASCII to float)
         ref_latitude = atof(CONFIG_GNSS_SAMPLE_REFERENCE_LATITUDE);
         ref_longitude = atof(CONFIG_GNSS_SAMPLE_REFERENCE_LONGITUDE);
     }
@@ -741,13 +742,24 @@ int main(void)
         return -1;
     }
 
+    // k_uptime_get returns milliseconds since boot
     fix_timestamp = k_uptime_get();
 
     for (;;) {
+        /* Wait for GNSS events
+        k_poll will block until one of the events is ready
+            1st event: new PVT data available semaphore
+            2nd event: new NMEA data available message queue
+        options
+        - K_NO_WAIT: do not wait
+        - K_FOREVER: wait indefinitely
+        - K_MSEC(x): wait x milliseconds
+        */
         (void)k_poll(events, 2, K_FOREVER);
 
         if (events[0].state == K_POLL_STATE_SEM_AVAILABLE &&
-            k_sem_take(events[0].sem, K_NO_WAIT) == 0) {
+            //take semaphore without waiting (K_NO_WAIT), ==0 mean success
+            k_sem_take(events[0].sem, K_NO_WAIT) == 0) {            
             /* New PVT data available */
 
             if (IS_ENABLED(CONFIG_GNSS_SAMPLE_MODE_TTFF_TEST)) {
@@ -789,7 +801,7 @@ int main(void)
         }
 
 handle_nmea:
-        if (events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE &&
+        if (events[1].state == K_POLL_STATE_MSGQ_DATA_AVAILABLE &&            
             k_msgq_get(events[1].msgq, &nmea_data, K_NO_WAIT) == 0) {
             /* New NMEA data available */
 
